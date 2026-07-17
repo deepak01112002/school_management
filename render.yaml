@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: free
     rootDir: .
-    buildCommand: npm install -g pnpm@9 @nestjs/cli && pnpm install --frozen-lockfile && cd apps/api && npx prisma generate && nest build
+    buildCommand: npm install -g pnpm@9 @nestjs/cli@10.4.2 && pnpm install --frozen-lockfile && cd apps/api && npx prisma generate && nest build
     startCommand: cd apps/api && node dist/main
     healthCheckPath: /api/v1/health
     envVars:
