@@ -9,8 +9,7 @@ services:
       pnpm install --frozen-lockfile &&
       cd apps/api &&
       npx prisma generate &&
-      cd ../.. &&
-      pnpm --filter @school-erp/api run build
+      ./node_modules/.bin/nest build
     startCommand: cd apps/api && node dist/main
     healthCheckPath: /api/v1/health
     envVars:
