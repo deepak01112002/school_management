@@ -1,0 +1,78 @@
+version: '3.9'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: development
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://${POSTGRES_USER:-school_erp}:${POSTGRES_PASSWORD:-devpassword}@postgres:5432/${POSTGRES_DB:-school_erp}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-devredis}@redis:6379
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      S3_BUCKET: school-erp
+    volumes:
+      - ./apps/api/src:/app/apps/api/src:delegated
+      - ./apps/api/prisma:/app/apps/api/prisma:delegated
+      - ./packages:/app/packages:delegated
+      - /app/node_modules
+      - /app/apps/api/node_modules
+    ports:
+      - "3001:3001"
+      - "9229:9229"
+    command: node_modules/.bin/nest start --watch --debug 0.0.0.0:9229
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      target: development
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3001/api/v1
+    volumes:
+      - ./apps/web:/app/apps/web:delegated
+      - ./packages:/app/packages:delegated
+      - /app/node_modules
+      - /app/apps/web/node_modules
+      - /app/apps/web/.next
+    ports:
+      - "3000:3000"
+    command: pnpm run dev
+
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+      target: development
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://${POSTGRES_USER:-school_erp}:${POSTGRES_PASSWORD:-devpassword}@postgres:5432/${POSTGRES_DB:-school_erp}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-devredis}@redis:6379
+    volumes:
+      - ./apps/worker/src:/app/apps/worker/src:delegated
+    command: pnpm run dev
+
+  postgres:
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devpassword}
+
+  redis:
+    command: redis-server --requirepass ${REDIS_PASSWORD:-devredis} --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-devredis}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "6379:6379"
+    environment: {}
+
+  minio:
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}

@@ -1,0 +1,38 @@
+services:
+  - type: web
+    name: school-erp-api
+    runtime: node
+    plan: free
+    rootDir: .
+    buildCommand: |
+      npm install -g pnpm@9 &&
+      pnpm install --frozen-lockfile &&
+      cd apps/api &&
+      npx prisma generate &&
+      cd ../.. &&
+      pnpm --filter @school-erp/api run build
+    startCommand: cd apps/api && node dist/main
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: JWT_PRIVATE_KEY
+        sync: false
+      - key: JWT_PUBLIC_KEY
+        sync: false
+      - key: JWT_ACCESS_EXPIRES_IN
+        value: 15m
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 7d
+      - key: THROTTLE_TTL
+        value: "60000"
+      - key: THROTTLE_LIMIT
+        value: "300"
+      - key: ALLOWED_ORIGINS
+        sync: false
