@@ -3,14 +3,14 @@
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
 
 type Status = 'loading' | 'success' | 'invalid' | 'expired';
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
   const [status, setStatus] = useState<Status>('loading');
@@ -86,5 +86,20 @@ export default function VerifyEmailPage() {
         </>
       )}
     </div>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="rounded-xl border bg-card p-8 shadow-sm text-center space-y-5">
+          <Loader2 className="mx-auto h-10 w-10 animate-spin text-primary" aria-hidden="true" />
+          <p className="text-sm text-muted-foreground">Loading…</p>
+        </div>
+      }
+    >
+      <VerifyEmailContent />
+    </Suspense>
   );
 }
